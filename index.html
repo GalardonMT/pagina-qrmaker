@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Código QR</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">
+                <div class="brand-icon">QR</div>
+                <span>QR Maker</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-wrapper">
+        <div class="card">
+            <h1>Generador de Código QR</h1>
+
+            <div class="input-row">
+                <input type="text" id="linkInput" placeholder="Pega aquí la URL que quieres convertir (por ejemplo, https://tusitio.com)">
+                <button onclick="generarQR()">Generar QR</button>
+            </div>
+
+            <div class="info-block">
+                <h2>Convierte enlaces en códigos QR al instante</h2>
+                <p>
+                    Este generador toma la URL que escribas arriba, la envía a un servicio gratuito de códigos QR
+                    y te devuelve una imagen lista para escanear con la cámara de tu celular.
+                </p>
+                <p>
+                    Es útil para compartir redes sociales, menús digitales, formularios, invitaciones o cualquier página web
+                    sin tener que escribir enlaces largos.
+                </p>
+                <h2>¿Cómo usarlo?</h2>
+                <ol>
+                    <li>Pega la URL del sitio, formulario o perfil que quieras compartir.</li>
+                    <li>Haz clic en «Generar QR» y espera a que aparezca la imagen.</li>
+                    <li>Descarga el código haciendo clic en el botón debajo del QR generado.</li>
+                </ol>
+            </div>
+
+            <div class="qr-section">
+                <strong>Código QR generado</strong>
+                <div id="qr-container">
+                    <span class="qr-placeholder" id="qrPlaceholder">Ingresa una URL arriba y genera tu primer código QR.</span>
+                    <img id="qrImage" src="" alt="Código QR" style="display:none;">
+                </div>
+                <button id="downloadBtn" style="display:none; margin-top: 10px;" onclick="descargarQR()">Descargar QR</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Consejo: prueba con enlaces a tus redes sociales, tu WhatsApp, un formulario o cualquier página que quieras compartir rápidamente.
+    </footer>
+
+    <script>
+        function generarQR() {
+            const link = document.getElementById("linkInput").value;
+            const qrImage = document.getElementById("qrImage");
+            const placeholder = document.getElementById("qrPlaceholder");
+            const downloadBtn = document.getElementById("downloadBtn");
+            
+            if (link.trim() === "") {
+                alert("Por favor, ingresa un enlace válido.");
+                return;
+            }
+
+            // Llama a una API gratuita para convertir el texto en una imagen QR
+            const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
+
+            placeholder.style.display = "none";
+            qrImage.src = apiUrl;
+            qrImage.style.display = "block";
+            downloadBtn.style.display = "inline-block";
+        }
+
+        async function descargarQR() {
+            const qrImage = document.getElementById("qrImage");
+            if (!qrImage || !qrImage.src) {
+                return;
+            }
+
+            try {
+                const response = await fetch(qrImage.src, { mode: "cors" });
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "codigo-qr.png";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                alert("No se pudo descargar la imagen del QR automáticamente. Intenta guardarla manualmente.");
+            }
+        }
+    </script>
+</body>
+</html>
