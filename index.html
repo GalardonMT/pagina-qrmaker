@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Código QR</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://quge5.com/88/tag.min.js" data-zone="214720" async data-cfasync="false"></script>
+    <title>Crear QR - Generador de Código QR Gratis</title>
+    <meta name="description" content="Crea tu código QR gratis y rápido. Solo pega tu enlace y genera tu código al instante.">
 </head>
 
 <body>
-
     <header class="topbar">
         <div class="topbar-inner">
             <div class="brand">
@@ -52,7 +52,10 @@
                     <span class="qr-placeholder" id="qrPlaceholder">Ingresa una URL arriba y genera tu primer código QR.</span>
                     <img id="qrImage" src="" alt="Código QR" style="display:none;">
                 </div>
-                <button id="downloadBtn" style="display:none; margin-top: 10px;" onclick="descargarQR()">Descargar QR</button>
+                <div class="qr-actions">
+                    <button id="downloadBtn" style="display:none;" onclick="descargarQR()">Descargar QR</button>
+                    <button id="editStyleBtn" style="display:none;" onclick="abrirModalEstilo()">Editar estilo</button>
+                </div>
             </div>
         </div>
     </div>
@@ -61,49 +64,65 @@
         Consejo: prueba con enlaces a tus redes sociales, tu WhatsApp, un formulario o cualquier página que quieras compartir rápidamente.
     </footer>
 
-    <script>
-        function generarQR() {
-            const link = document.getElementById("linkInput").value;
-            const qrImage = document.getElementById("qrImage");
-            const placeholder = document.getElementById("qrPlaceholder");
-            const downloadBtn = document.getElementById("downloadBtn");
-            
-            if (link.trim() === "") {
-                alert("Por favor, ingresa un enlace válido.");
-                return;
-            }
+    <div id="styleModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-block">
+                    <h2>Editar estilo del QR</h2>
+                    <p class="modal-description">Ajusta los colores y la forma del borde del código QR.</p>
+                </div>
+                <button type="button" class="modal-close" onclick="cerrarModalEstilo()" aria-label="Cerrar">×</button>
+            </div>
 
-            // Llama a una API gratuita para convertir el texto en una imagen QR
-            const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
+            <div class="modal-field">
+                <label for="qrColorInput">Color del código</label>
+                <input type="color" id="qrColorInput" value="#000000" oninput="aplicarCambiosEnVivo()">
+            </div>
 
-            placeholder.style.display = "none";
-            qrImage.src = apiUrl;
-            qrImage.style.display = "block";
-            downloadBtn.style.display = "inline-block";
-        }
+            <div class="modal-field">
+                <label for="qrBgColorInput">Color de fondo</label>
+                <input type="color" id="qrBgColorInput" value="#ffffff" oninput="aplicarCambiosEnVivo()">
+            </div>
 
-        async function descargarQR() {
-            const qrImage = document.getElementById("qrImage");
-            if (!qrImage || !qrImage.src) {
-                return;
-            }
+            <div class="modal-field">
+                <label for="qrEccSelect">Corrección de errores</label>
+                <select id="qrEccSelect" onchange="aplicarCambiosEnVivo()">
+                    <option value="L">Baja (L - ~7%)</option>
+                    <option value="M">Media (M - ~15%)</option>
+                    <option value="Q">Alta (Q - ~25%)</option>
+                    <option value="H">Máxima (H - ~30%)</option>
+                </select>
+            </div>
 
-            try {
-                const response = await fetch(qrImage.src, { mode: "cors" });
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
+            <div class="modal-field">
+                <label for="qrSizeInput">Tamaño del QR: <span id="qrSizeValue">220 px</span></label>
+                <input type="range" id="qrSizeInput" min="150" max="400" step="10" value="220" oninput="actualizarEtiquetaTamano(); aplicarCambiosEnVivo()">
+            </div>
 
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = "codigo-qr.png";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                alert("No se pudo descargar la imagen del QR automáticamente. Intenta guardarla manualmente.");
-            }
-        }
-    </script>
+            <div class="modal-field">
+                <label for="qrRadiusInput">Redondeo de las esquinas: <span id="qrRadiusValue">8 px</span></label>
+                <input type="range" id="qrRadiusInput" min="0" max="32" step="2" value="8" oninput="actualizarEtiquetaRadio(); aplicarCambiosEnVivo()">
+            </div>
+
+            <div class="modal-field">
+                <label for="qrQzoneInput">Margen blanco (quiet zone): <span id="qrQzoneValue">0</span> módulos</label>
+                <input type="range" id="qrQzoneInput" min="0" max="8" step="1" value="0" oninput="actualizarEtiquetaQzone(); aplicarCambiosEnVivo()">
+            </div>
+
+            <div class="modal-preview">
+                <span class="modal-preview-label">Vista previa</span>
+                <div class="modal-preview-box">
+                    <img id="qrPreviewImage" alt="Vista previa código QR" style="display:none;">
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" onclick="guardarEstiloQR()">Guardar</button>
+                <button type="button" class="btn-secondary" onclick="cerrarModalEstilo()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
